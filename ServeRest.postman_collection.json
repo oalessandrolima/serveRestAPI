@@ -22,8 +22,11 @@
 									"});",
 									"",
 									"//capturar nome, email e senha",
+									"pm.globals.unset(\"userName\");",
 									"pm.globals.set(\"userName\", pm.response.json().results[0].name.first)",
+									"pm.globals.unset(\"userEmail\");",
 									"pm.globals.set(\"userEmail\", pm.response.json().results[0].email)",
+									"pm.globals.unset(\"userPassword\");",
 									"pm.globals.set(\"userPassword\", pm.response.json().results[0].login.password)"
 								],
 								"type": "text/javascript",
@@ -60,8 +63,11 @@
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
+									"pm.globals.unset(\"productName\");",
 									"pm.globals.set(\"productName\", pm.response.json().products[0].title)",
+									"pm.globals.unset(\"productDescription\");",
 									"pm.globals.set(\"productDescription\", pm.response.json().products[0].tags[1])",
+									"pm.globals.unset(\"productStock\");",
 									"pm.globals.set(\"productStock\", pm.response.json().products[0].stock)"
 								],
 								"type": "text/javascript",
@@ -253,6 +259,7 @@
 									"});",
 									"",
 									"pm.test(\"Capturar o id\", function() {",
+									"    pm.globals.unset(\"userId\");",
 									"    pm.globals.set(\"userId\", pm.response.json()._id)",
 									"})",
 									"",
@@ -585,7 +592,12 @@
 						}
 					},
 					"response": []
-				},
+				}
+			]
+		},
+		{
+			"name": "login",
+			"item": [
 				{
 					"name": "realizar login",
 					"event": [
@@ -634,6 +646,7 @@
 									"})",
 									"",
 									"pm.test(\"Capturar o token\", function() {",
+									"    pm.globals.unset(\"userToken\");",
 									"    pm.globals.set(\"userToken\", pm.response.json().authorization)",
 									"})"
 								],
@@ -812,6 +825,7 @@
 									"});",
 									"",
 									"pm.test(\"Capturar o id\", function() {",
+									"    pm.globals.unset(\"productId\");",
 									"    pm.globals.set(\"productId\", pm.response.json()._id)",
 									"})"
 								],
@@ -894,7 +908,14 @@
 									"    const Ajv = require(\"ajv\")",
 									"    const ajv = new Ajv({allErrors: true, verbose: true})",
 									"\tpm.expect(ajv.validate(pm.globals.get('schema'), pm.response.json()), JSON.stringify(ajv.errors)).to.be.true;",
-									"})"
+									"})",
+									"",
+									"pm.test(\"Validar o nome do produto retornado\", function() {",
+									"    pm.expect(pm.response.json().nome).to.be.eql(pm.globals.get('productName'))",
+									"})",
+									"",
+									"pm.globals.unset(\"productNewId\");",
+									"pm.globals.set(\"productNewId\", pm.response.json()._id)"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1137,6 +1158,1132 @@
 							"path": [
 								"produtos",
 								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "carrinhos / quantidade dos produtos",
+			"item": [
+				{
+					"name": "listar carrinhos cadastrados",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Schema é valido', function () {",
+									"    const Ajv = require(\"ajv\")",
+									"    const ajv = new Ajv({allErrors: true, verbose: true})",
+									"\tpm.expect(ajv.validate(pm.globals.get('schema'), pm.response.json()), JSON.stringify(ajv.errors)).to.be.true;",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.globals.unset(\"schema\");",
+									"",
+									"pm.globals.set(\"schema\", {",
+									"  \"type\": \"object\",",
+									"  \"properties\": {",
+									"    \"quantidade\": {",
+									"      \"type\": \"integer\"",
+									"    },",
+									"    \"carrinhos\": {",
+									"      \"type\": \"array\",",
+									"      \"items\": [",
+									"        {",
+									"          \"type\": \"object\",",
+									"          \"properties\": {",
+									"            \"produtos\": {",
+									"              \"type\": \"array\",",
+									"              \"items\": [",
+									"                {",
+									"                  \"type\": \"object\",",
+									"                  \"properties\": {",
+									"                    \"idProduto\": {",
+									"                      \"type\": \"string\"",
+									"                    },",
+									"                    \"quantidade\": {",
+									"                      \"type\": \"integer\"",
+									"                    },",
+									"                    \"precoUnitario\": {",
+									"                      \"type\": \"integer\"",
+									"                    }",
+									"                  },",
+									"                  \"required\": [",
+									"                    \"idProduto\",",
+									"                    \"quantidade\",",
+									"                    \"precoUnitario\"",
+									"                  ]",
+									"                }",
+									"              ]",
+									"            },",
+									"            \"precoTotal\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"quantidadeTotal\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"idUsuario\": {",
+									"              \"type\": \"string\"",
+									"            },",
+									"            \"_id\": {",
+									"              \"type\": \"string\"",
+									"            }",
+									"          },",
+									"          \"required\": [",
+									"            \"produtos\",",
+									"            \"precoTotal\",",
+									"            \"quantidadeTotal\",",
+									"            \"idUsuario\",",
+									"            \"_id\"",
+									"          ]",
+									"        },",
+									"        {",
+									"          \"type\": \"object\",",
+									"          \"properties\": {",
+									"            \"produtos\": {",
+									"              \"type\": \"array\",",
+									"              \"items\": [",
+									"                {",
+									"                  \"type\": \"object\",",
+									"                  \"properties\": {",
+									"                    \"idProduto\": {",
+									"                      \"type\": \"string\"",
+									"                    },",
+									"                    \"quantidade\": {",
+									"                      \"type\": \"integer\"",
+									"                    },",
+									"                    \"precoUnitario\": {",
+									"                      \"type\": \"integer\"",
+									"                    }",
+									"                  },",
+									"                  \"required\": [",
+									"                    \"idProduto\",",
+									"                    \"quantidade\",",
+									"                    \"precoUnitario\"",
+									"                  ]",
+									"                }",
+									"              ]",
+									"            },",
+									"            \"precoTotal\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"quantidadeTotal\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"idUsuario\": {",
+									"              \"type\": \"string\"",
+									"            },",
+									"            \"_id\": {",
+									"              \"type\": \"string\"",
+									"            }",
+									"          },",
+									"          \"required\": [",
+									"            \"produtos\",",
+									"            \"precoTotal\",",
+									"            \"quantidadeTotal\",",
+									"            \"idUsuario\",",
+									"            \"_id\"",
+									"          ]",
+									"        },",
+									"        {",
+									"          \"type\": \"object\",",
+									"          \"properties\": {",
+									"            \"produtos\": {",
+									"              \"type\": \"array\",",
+									"              \"items\": [",
+									"                {",
+									"                  \"type\": \"object\",",
+									"                  \"properties\": {",
+									"                    \"idProduto\": {",
+									"                      \"type\": \"string\"",
+									"                    },",
+									"                    \"quantidade\": {",
+									"                      \"type\": \"integer\"",
+									"                    },",
+									"                    \"precoUnitario\": {",
+									"                      \"type\": \"integer\"",
+									"                    }",
+									"                  },",
+									"                  \"required\": [",
+									"                    \"idProduto\",",
+									"                    \"quantidade\",",
+									"                    \"precoUnitario\"",
+									"                  ]",
+									"                }",
+									"              ]",
+									"            },",
+									"            \"precoTotal\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"quantidadeTotal\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"idUsuario\": {",
+									"              \"type\": \"string\"",
+									"            },",
+									"            \"_id\": {",
+									"              \"type\": \"string\"",
+									"            }",
+									"          },",
+									"          \"required\": [",
+									"            \"produtos\",",
+									"            \"precoTotal\",",
+									"            \"quantidadeTotal\",",
+									"            \"idUsuario\",",
+									"            \"_id\"",
+									"          ]",
+									"        },",
+									"        {",
+									"          \"type\": \"object\",",
+									"          \"properties\": {",
+									"            \"produtos\": {",
+									"              \"type\": \"array\",",
+									"              \"items\": [",
+									"                {",
+									"                  \"type\": \"object\",",
+									"                  \"properties\": {",
+									"                    \"idProduto\": {",
+									"                      \"type\": \"string\"",
+									"                    },",
+									"                    \"quantidade\": {",
+									"                      \"type\": \"integer\"",
+									"                    },",
+									"                    \"precoUnitario\": {",
+									"                      \"type\": \"integer\"",
+									"                    }",
+									"                  },",
+									"                  \"required\": [",
+									"                    \"idProduto\",",
+									"                    \"quantidade\",",
+									"                    \"precoUnitario\"",
+									"                  ]",
+									"                },",
+									"                {",
+									"                  \"type\": \"object\",",
+									"                  \"properties\": {",
+									"                    \"idProduto\": {",
+									"                      \"type\": \"string\"",
+									"                    },",
+									"                    \"quantidade\": {",
+									"                      \"type\": \"integer\"",
+									"                    },",
+									"                    \"precoUnitario\": {",
+									"                      \"type\": \"integer\"",
+									"                    }",
+									"                  },",
+									"                  \"required\": [",
+									"                    \"idProduto\",",
+									"                    \"quantidade\",",
+									"                    \"precoUnitario\"",
+									"                  ]",
+									"                }",
+									"              ]",
+									"            },",
+									"            \"precoTotal\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"quantidadeTotal\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"idUsuario\": {",
+									"              \"type\": \"string\"",
+									"            },",
+									"            \"_id\": {",
+									"              \"type\": \"string\"",
+									"            }",
+									"          },",
+									"          \"required\": [",
+									"            \"produtos\",",
+									"            \"precoTotal\",",
+									"            \"quantidadeTotal\",",
+									"            \"idUsuario\",",
+									"            \"_id\"",
+									"          ]",
+									"        },",
+									"        {",
+									"          \"type\": \"object\",",
+									"          \"properties\": {",
+									"            \"produtos\": {",
+									"              \"type\": \"array\",",
+									"              \"items\": [",
+									"                {",
+									"                  \"type\": \"object\",",
+									"                  \"properties\": {",
+									"                    \"idProduto\": {",
+									"                      \"type\": \"string\"",
+									"                    },",
+									"                    \"quantidade\": {",
+									"                      \"type\": \"integer\"",
+									"                    },",
+									"                    \"precoUnitario\": {",
+									"                      \"type\": \"integer\"",
+									"                    }",
+									"                  },",
+									"                  \"required\": [",
+									"                    \"idProduto\",",
+									"                    \"quantidade\",",
+									"                    \"precoUnitario\"",
+									"                  ]",
+									"                }",
+									"              ]",
+									"            },",
+									"            \"precoTotal\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"quantidadeTotal\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"idUsuario\": {",
+									"              \"type\": \"string\"",
+									"            },",
+									"            \"_id\": {",
+									"              \"type\": \"string\"",
+									"            }",
+									"          },",
+									"          \"required\": [",
+									"            \"produtos\",",
+									"            \"precoTotal\",",
+									"            \"quantidadeTotal\",",
+									"            \"idUsuario\",",
+									"            \"_id\"",
+									"          ]",
+									"        }",
+									"      ]",
+									"    }",
+									"  },",
+									"  \"required\": [",
+									"    \"quantidade\",",
+									"    \"carrinhos\"",
+									"  ]",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/carrinhos",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"carrinhos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "cadastrar carrinho",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Schema é valido', function () {",
+									"    const Ajv = require(\"ajv\")",
+									"    const ajv = new Ajv({allErrors: true, verbose: true})",
+									"\tpm.expect(ajv.validate(pm.globals.get('schema'), pm.response.json()), JSON.stringify(ajv.errors)).to.be.true;",
+									"})",
+									"",
+									"pm.test(\"Validar a mensagem de cadastro realizado com sucesso\", function () {",
+									"    pm.expect(pm.response.json().message).to.be.eql(\"Cadastro realizado com sucesso\")",
+									"});",
+									"",
+									"pm.test(\"Capturar o id\", function() {",
+									"    pm.globals.unset(\"cartId\");",
+									"    pm.globals.set(\"cartId\", pm.response.json()._id)",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.globals.unset(\"schema\");",
+									"",
+									"pm.globals.set(\"schema\", {",
+									"  \"type\": \"object\",",
+									"  \"properties\": {",
+									"    \"message\": {",
+									"      \"type\": \"string\"",
+									"    },",
+									"    \"_id\": {",
+									"      \"type\": \"string\"",
+									"    }",
+									"  },",
+									"  \"required\": [",
+									"    \"message\",",
+									"    \"_id\"",
+									"  ]",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "{{userToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"produtos\": [\n    {\n      \"idProduto\": \"{{productId}}\",\n      \"quantidade\": 3\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/carrinhos",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"carrinhos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "capturar quantidade do produto",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.globals.unset(\"schema\");",
+									"",
+									"pm.globals.set(\"schema\", {",
+									"  \"type\": \"object\",",
+									"  \"properties\": {",
+									"    \"nome\": {",
+									"      \"type\": \"string\"",
+									"    },",
+									"    \"preco\": {",
+									"      \"type\": \"integer\"",
+									"    },",
+									"    \"descricao\": {",
+									"      \"type\": \"string\"",
+									"    },",
+									"    \"quantidade\": {",
+									"      \"type\": \"integer\"",
+									"    },",
+									"    \"_id\": {",
+									"      \"type\": \"string\"",
+									"    }",
+									"  },",
+									"  \"required\": [",
+									"    \"nome\",",
+									"    \"preco\",",
+									"    \"descricao\",",
+									"    \"quantidade\",",
+									"    \"_id\"",
+									"  ]",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Schema é válido\", function(){",
+									"    const Ajv = require(\"ajv\")",
+									"    const ajv = new Ajv({allErrors: true, verbose: true})",
+									"\tpm.expect(ajv.validate(pm.globals.get('schema'), pm.response.json()), JSON.stringify(ajv.errors)).to.be.true;",
+									"})",
+									"",
+									"pm.test(\"Capturar a quantidade do produto\", function() {",
+									"    pm.globals.unset(\"productQuantity\");",
+									"    pm.globals.set(\"productQuantity\", pm.response.json().quantidade)",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/produtos/{{productId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"produtos",
+								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "buscar carrinho",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Schema é valido', function () {",
+									"    const Ajv = require(\"ajv\")",
+									"    const ajv = new Ajv({allErrors: true, verbose: true})",
+									"\tpm.expect(ajv.validate(pm.globals.get('schema'), pm.response.json()), JSON.stringify(ajv.errors)).to.be.true;",
+									"})",
+									"",
+									"pm.test(\"Validar a quantidade total no carrinho\", function () {",
+									"    pm.expect(pm.response.json().produtos[0].quantidade).to.be.eql(pm.response.json().quantidadeTotal)",
+									"});",
+									"",
+									"pm.test(\"Validar o valor total\", function () {",
+									"    pm.expect(pm.response.json().precoTotal).to.be.eql(pm.response.json().produtos[0].precoUnitario * pm.response.json().produtos[0].quantidade)",
+									"});",
+									"",
+									"pm.test(\"Validar que o produto cadastrado pelo usuário foi inserido no carrinho\", function () {",
+									"    pm.expect(pm.response.json().produtos[0].idProduto).to.be.eql(pm.globals.get(\"productNewId\"))",
+									"});",
+									"",
+									"pm.globals.unset(\"productCartId\");",
+									"pm.globals.set(\"productCartId\", pm.response.json().produtos[0].idProduto)",
+									"",
+									"pm.test(\"Capturar a quantidade do produto no carrinho\", function() {",
+									"    pm.globals.unset(\"productCartQuantity\");",
+									"    pm.globals.set(\"productCartQuantity\", pm.response.json().produtos[0].quantidade)",
+									"})",
+									"",
+									"pm.globals.unset(\"resultSubtraction\");",
+									"var value1 = pm.globals.get(\"productStock\");",
+									"var value2 = pm.globals.get(\"productCartQuantity\");",
+									"var result = parseInt(value1) - parseInt(value2);",
+									"pm.globals.set(\"resultSubtraction\", result);",
+									"",
+									"pm.test(\"Validar a quantidade no estoque do produto após ser inserido no carrinho\", function () {",
+									"    pm.expect(pm.globals.get(\"resultSubtraction\")).to.be.eql(pm.globals.get(\"productQuantity\"))",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.globals.unset(\"schema\");",
+									"",
+									"pm.globals.set(\"schema\", {",
+									"  \"type\": \"object\",",
+									"  \"properties\": {",
+									"    \"produtos\": {",
+									"      \"type\": \"array\",",
+									"      \"items\": [",
+									"        {",
+									"          \"type\": \"object\",",
+									"          \"properties\": {",
+									"            \"idProduto\": {",
+									"              \"type\": \"string\"",
+									"            },",
+									"            \"quantidade\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"precoUnitario\": {",
+									"              \"type\": \"integer\"",
+									"            }",
+									"          },",
+									"          \"required\": [",
+									"            \"idProduto\",",
+									"            \"quantidade\",",
+									"            \"precoUnitario\"",
+									"          ]",
+									"        }",
+									"      ]",
+									"    },",
+									"    \"precoTotal\": {",
+									"      \"type\": \"integer\"",
+									"    },",
+									"    \"quantidadeTotal\": {",
+									"      \"type\": \"integer\"",
+									"    },",
+									"    \"idUsuario\": {",
+									"      \"type\": \"string\"",
+									"    },",
+									"    \"_id\": {",
+									"      \"type\": \"string\"",
+									"    }",
+									"  },",
+									"  \"required\": [",
+									"    \"produtos\",",
+									"    \"precoTotal\",",
+									"    \"quantidadeTotal\",",
+									"    \"idUsuario\",",
+									"    \"_id\"",
+									"  ]",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/carrinhos/{{cartId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"carrinhos",
+								"{{cartId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "cancelar carrinho",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.globals.unset(\"schema\");",
+									"",
+									"pm.globals.set(\"schema\", {",
+									"  \"type\": \"object\",",
+									"  \"properties\": {",
+									"    \"message\": {",
+									"      \"type\": \"string\"",
+									"    }",
+									"  },",
+									"  \"required\": [",
+									"    \"message\"",
+									"  ]",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Validar a mensagem registro excluído com sucesso\", function () {",
+									"    pm.expect(pm.response.json().message).to.be.eql(\"Registro excluído com sucesso. Estoque dos produtos reabastecido\")",
+									"});",
+									"",
+									"pm.test(\"Schema é válido\", function(){",
+									"    const Ajv = require(\"ajv\")",
+									"    const ajv = new Ajv({allErrors: true, verbose: true})",
+									"\tpm.expect(ajv.validate(pm.globals.get('schema'), pm.response.json()), JSON.stringify(ajv.errors)).to.be.true;",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "{{userToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/carrinhos/cancelar-compra",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"carrinhos",
+								"cancelar-compra"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "cadastrar carrinho novamente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Schema é valido', function () {",
+									"    const Ajv = require(\"ajv\")",
+									"    const ajv = new Ajv({allErrors: true, verbose: true})",
+									"\tpm.expect(ajv.validate(pm.globals.get('schema'), pm.response.json()), JSON.stringify(ajv.errors)).to.be.true;",
+									"})",
+									"",
+									"pm.test(\"Validar a mensagem de cadastro realizado com sucesso\", function () {",
+									"    pm.expect(pm.response.json().message).to.be.eql(\"Cadastro realizado com sucesso\")",
+									"});",
+									"",
+									"pm.test(\"Capturar o id\", function() {",
+									"    pm.globals.unset(\"cartId\");",
+									"    pm.globals.set(\"cartId\", pm.response.json()._id)",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.globals.unset(\"schema\");",
+									"",
+									"pm.globals.set(\"schema\", {",
+									"  \"type\": \"object\",",
+									"  \"properties\": {",
+									"    \"message\": {",
+									"      \"type\": \"string\"",
+									"    },",
+									"    \"_id\": {",
+									"      \"type\": \"string\"",
+									"    }",
+									"  },",
+									"  \"required\": [",
+									"    \"message\",",
+									"    \"_id\"",
+									"  ]",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "{{userToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"produtos\": [\n    {\n      \"idProduto\": \"{{productId}}\",\n      \"quantidade\": 2\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/carrinhos",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"carrinhos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "capturar quantidade do produto novamente",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.globals.unset(\"schema\");",
+									"",
+									"pm.globals.set(\"schema\", {",
+									"  \"type\": \"object\",",
+									"  \"properties\": {",
+									"    \"nome\": {",
+									"      \"type\": \"string\"",
+									"    },",
+									"    \"preco\": {",
+									"      \"type\": \"integer\"",
+									"    },",
+									"    \"descricao\": {",
+									"      \"type\": \"string\"",
+									"    },",
+									"    \"quantidade\": {",
+									"      \"type\": \"integer\"",
+									"    },",
+									"    \"_id\": {",
+									"      \"type\": \"string\"",
+									"    }",
+									"  },",
+									"  \"required\": [",
+									"    \"nome\",",
+									"    \"preco\",",
+									"    \"descricao\",",
+									"    \"quantidade\",",
+									"    \"_id\"",
+									"  ]",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Schema é válido\", function(){",
+									"    const Ajv = require(\"ajv\")",
+									"    const ajv = new Ajv({allErrors: true, verbose: true})",
+									"\tpm.expect(ajv.validate(pm.globals.get('schema'), pm.response.json()), JSON.stringify(ajv.errors)).to.be.true;",
+									"})",
+									"",
+									"pm.test(\"Capturar a quantidade do produto\", function() {",
+									"    pm.globals.unset(\"productQuantity\");",
+									"    pm.globals.set(\"productQuantity\", pm.response.json().quantidade)",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/produtos/{{productId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"produtos",
+								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "buscar carrinho novamente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Schema é valido', function () {",
+									"    const Ajv = require(\"ajv\")",
+									"    const ajv = new Ajv({ allErrors: true, verbose: true })",
+									"    pm.expect(ajv.validate(pm.globals.get('schema'), pm.response.json()), JSON.stringify(ajv.errors)).to.be.true;",
+									"})",
+									"",
+									"pm.test(\"Validar a quantidade total no carrinho\", function () {",
+									"    pm.expect(pm.response.json().produtos[0].quantidade).to.be.eql(pm.response.json().quantidadeTotal)",
+									"});",
+									"",
+									"pm.test(\"Validar o valor total\", function () {",
+									"    pm.expect(pm.response.json().precoTotal).to.be.eql(pm.response.json().produtos[0].precoUnitario * pm.response.json().produtos[0].quantidade)",
+									"});",
+									"",
+									"pm.test(\"Validar que o produto cadastrado pelo usuário foi inserido no carrinho\", function () {",
+									"    pm.expect(pm.response.json().produtos[0].idProduto).to.be.eql(pm.globals.get(\"productNewId\"))",
+									"});",
+									"",
+									"pm.test(\"Capturar a quantidade do produto no carrinho\", function() {",
+									"    pm.globals.unset(\"productCartQuantity\");",
+									"    pm.globals.set(\"productCartQuantity\", pm.response.json().produtos[0].quantidade)",
+									"})",
+									"",
+									"pm.globals.unset(\"resultSubtraction\");",
+									"var value1 = pm.globals.get(\"productStock\");",
+									"var value2 = pm.globals.get(\"productCartQuantity\");",
+									"var result = parseInt(value1) - parseInt(value2);",
+									"pm.globals.set(\"resultSubtraction\", result);",
+									"",
+									"pm.test(\"Validar a quantidade no estoque do produto após ser inserido no carrinho\", function () {",
+									"    pm.expect(pm.globals.get(\"resultSubtraction\")).to.be.eql(pm.globals.get(\"productQuantity\"))",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.globals.unset(\"schema\");",
+									"",
+									"pm.globals.set(\"schema\", {",
+									"  \"type\": \"object\",",
+									"  \"properties\": {",
+									"    \"produtos\": {",
+									"      \"type\": \"array\",",
+									"      \"items\": [",
+									"        {",
+									"          \"type\": \"object\",",
+									"          \"properties\": {",
+									"            \"idProduto\": {",
+									"              \"type\": \"string\"",
+									"            },",
+									"            \"quantidade\": {",
+									"              \"type\": \"integer\"",
+									"            },",
+									"            \"precoUnitario\": {",
+									"              \"type\": \"integer\"",
+									"            }",
+									"          },",
+									"          \"required\": [",
+									"            \"idProduto\",",
+									"            \"quantidade\",",
+									"            \"precoUnitario\"",
+									"          ]",
+									"        }",
+									"      ]",
+									"    },",
+									"    \"precoTotal\": {",
+									"      \"type\": \"integer\"",
+									"    },",
+									"    \"quantidadeTotal\": {",
+									"      \"type\": \"integer\"",
+									"    },",
+									"    \"idUsuario\": {",
+									"      \"type\": \"string\"",
+									"    },",
+									"    \"_id\": {",
+									"      \"type\": \"string\"",
+									"    }",
+									"  },",
+									"  \"required\": [",
+									"    \"produtos\",",
+									"    \"precoTotal\",",
+									"    \"quantidadeTotal\",",
+									"    \"idUsuario\",",
+									"    \"_id\"",
+									"  ]",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/carrinhos/{{cartId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"carrinhos",
+								"{{cartId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "concluir carrinho",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.globals.unset(\"schema\");",
+									"",
+									"pm.globals.set(\"schema\", {",
+									"  \"type\": \"object\",",
+									"  \"properties\": {",
+									"    \"message\": {",
+									"      \"type\": \"string\"",
+									"    }",
+									"  },",
+									"  \"required\": [",
+									"    \"message\"",
+									"  ]",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Validar a mensagem registro excluído com sucesso\", function () {",
+									"    pm.expect(pm.response.json().message).to.be.eql(\"Registro excluído com sucesso\")",
+									"});",
+									"",
+									"pm.test(\"Schema é válido\", function(){",
+									"    const Ajv = require(\"ajv\")",
+									"    const ajv = new Ajv({allErrors: true, verbose: true})",
+									"\tpm.expect(ajv.validate(pm.globals.get('schema'), pm.response.json()), JSON.stringify(ajv.errors)).to.be.true;",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "{{userToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/carrinhos/concluir-compra",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"carrinhos",
+								"concluir-compra"
 							]
 						}
 					},
